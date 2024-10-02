@@ -7,18 +7,23 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
-@HiltViewModel
-class GameViewModel @Inject constructor(): ViewModel() {
+@HiltViewModel(assistedFactory = GameViewModel.GameViewModelFactory::class)
+class GameViewModel @AssistedInject constructor(
 
-    var gameEngine: GameEngine? = null
+    @Assisted val level: Int): ViewModel() {
+
+    @AssistedFactory
+    interface GameViewModelFactory {
+        fun create(level: Int): GameViewModel
+    }
+
+    // We can create the gameEngine directly during the viewmodel creation
+    var gameEngine = GameEngine(level)
 
     val gameEngineMessage = mutableStateOf("")
 
-    fun initGameEngine(level: Int) {
-        gameEngine = GameEngine(level)
-    }
-
     fun startGame() {
-        gameEngineMessage.value = gameEngine?.startGame() ?: "Game engine not initialized"
+        // No risk of NPE here
+        gameEngineMessage.value = gameEngine.startGame()
     }
 }

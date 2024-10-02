@@ -30,11 +30,14 @@ class MainActivity : ComponentActivity() {
                 ) { innerPadding ->
 
                     val level = 1
-                    val viewModel: GameViewModel = hiltViewModel<GameViewModel>()
+                    val viewModel: GameViewModel =
+                        hiltViewModel<GameViewModel, GameViewModel.GameViewModelFactory> { factory ->
+                            factory.create(level)
+                        }
                     val gameEngineMessage by viewModel.gameEngineMessage
 
                     LaunchedEffect(key1 = Unit) {
-                        viewModel.initGameEngine(level)
+                        // No need to init game
                         viewModel.startGame()
                     }
 

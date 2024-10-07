@@ -9,17 +9,22 @@ import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.ContextualFlowRow
+import androidx.compose.foundation.layout.ContextualFlowRowOverflow
+import androidx.compose.foundation.layout.ContextualFlowRowOverflowScope
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material3.ListItem
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
@@ -104,7 +109,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    @OptIn(ExperimentalSharedTransitionApi::class)
+    @OptIn(ExperimentalSharedTransitionApi::class, ExperimentalLayoutApi::class)
     @Composable
     private fun ListScreen(
         modifier: Modifier = Modifier,
@@ -112,40 +117,47 @@ class MainActivity : ComponentActivity() {
         sharedTransitionScope: SharedTransitionScope,
         animatedContentScope: AnimatedContentScope
     ) {
-        LazyColumn(
-            modifier = modifier,
-            verticalArrangement = Arrangement.Top,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            itemsIndexed(
-                key = { index, _ -> index },
-                items = emojiItems
-            ) { index, item ->
-                with(sharedTransitionScope) {
-                    ListItem(
-                        modifier = Modifier.clickable {
-                            navigateToDetailRoute(index)
-                        },
-                        headlineContent = {
-                            Text(
-                                text = item.description,
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                        },
-                        leadingContent = {
-                            Text(
-                                modifier = Modifier
-                                    .sharedElement(
-                                        sharedTransitionScope.rememberSharedContentState(key = "image-$index"),
-                                        animatedVisibilityScope = animatedContentScope
-                                    ),
-                                text = item.emoji,
-                                style = MaterialTheme.typography.displayMedium
-                            )
-                        }
-                    )
+
+        var maxLines by remember { mutableIntStateOf(2) }
+
+        val moreOrCollapseIndicator = @Composable { scope: ContextualFlowRowOverflowScope ->
+            val remainingItems = emojiItems.size - scope.shownItemCount
+            Button(onClick = {
+                if (remainingItems == 0) {
+                    maxLines = 2
+                } else {
+                    maxLines += 5
                 }
             }
+            ) {
+                if (remainingItems == 0) "Less" else "+$remainingItems"
+            }
+        }
+
+        ContextualFlowRow(
+            modifier = modifier,
+            itemCount = emojiItems.size,
+            maxLines = maxLines,
+            overflow = ContextualFlowRowOverflow.expandOrCollapseIndicator(
+                minRowsToShowCollapse = 4,
+                expandIndicator = moreOrCollapseIndicator,
+                collapseIndicator = moreOrCollapseIndicator
+            )
+        ) { index ->
+
+            with(sharedTransitionScope) {
+                Text(
+                    modifier = Modifier
+                        .clickable { navigateToDetailRoute(index) }
+                        .sharedElement(
+                            sharedTransitionScope.rememberSharedContentState(key = "image-$index"),
+                            animatedVisibilityScope = animatedContentScope
+                        ),
+                    text = emojiItems[index].emoji,
+                    style = MaterialTheme.typography.displayMedium
+                )
+            }
+
         }
     }
 }

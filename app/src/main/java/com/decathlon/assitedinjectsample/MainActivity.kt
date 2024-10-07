@@ -8,25 +8,22 @@ import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.ContextualFlowRow
-import androidx.compose.foundation.layout.ContextualFlowRowOverflow
-import androidx.compose.foundation.layout.ContextualFlowRowOverflowScope
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.carousel.HorizontalMultiBrowseCarousel
+import androidx.compose.material3.carousel.rememberCarouselState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -109,7 +106,10 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    @OptIn(ExperimentalSharedTransitionApi::class, ExperimentalLayoutApi::class)
+    @OptIn(
+        ExperimentalSharedTransitionApi::class,
+        ExperimentalMaterial3Api::class
+    )
     @Composable
     private fun ListScreen(
         modifier: Modifier = Modifier,
@@ -118,37 +118,22 @@ class MainActivity : ComponentActivity() {
         animatedContentScope: AnimatedContentScope
     ) {
 
-        var maxLines by remember { mutableIntStateOf(2) }
-
-        val moreOrCollapseIndicator = @Composable { scope: ContextualFlowRowOverflowScope ->
-            val remainingItems = emojiItems.size - scope.shownItemCount
-            Button(onClick = {
-                if (remainingItems == 0) {
-                    maxLines = 2
-                } else {
-                    maxLines += 5
-                }
-            }
-            ) {
-                if (remainingItems == 0) "Less" else "+$remainingItems"
-            }
-        }
-
-        ContextualFlowRow(
-            modifier = modifier,
-            itemCount = emojiItems.size,
-            maxLines = maxLines,
-            overflow = ContextualFlowRowOverflow.expandOrCollapseIndicator(
-                minRowsToShowCollapse = 4,
-                expandIndicator = moreOrCollapseIndicator,
-                collapseIndicator = moreOrCollapseIndicator
-            )
+        HorizontalMultiBrowseCarousel(
+            modifier = modifier.fillMaxSize(),
+            state = rememberCarouselState { emojiItems.count() },
+            preferredItemWidth = 60.dp,
+            itemSpacing = 2.dp,
+            contentPadding = PaddingValues(horizontal = 16.dp)
         ) { index ->
 
             with(sharedTransitionScope) {
                 Text(
                     modifier = Modifier
                         .clickable { navigateToDetailRoute(index) }
+                        .background(
+                            color = MaterialTheme.colorScheme.primary,
+                            shape = MaterialTheme.shapes.medium
+                        )
                         .sharedElement(
                             sharedTransitionScope.rememberSharedContentState(key = "image-$index"),
                             animatedVisibilityScope = animatedContentScope

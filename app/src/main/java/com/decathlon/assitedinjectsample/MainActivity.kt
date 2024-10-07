@@ -10,13 +10,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import com.decathlon.assitedinjectsample.ui.theme.AppTheme
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.serialization.Serializable
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -29,23 +31,24 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize()
                 ) { innerPadding ->
 
-                    val level = 1
-                    val viewModel: GameViewModel =
-                        hiltViewModel<GameViewModel, GameViewModel.GameViewModelFactory> { factory ->
-                            factory.create(level)
+                    val navController = rememberNavController()
+
+                    NavHost(
+                        modifier = Modifier.padding(innerPadding),
+                        navController = navController,
+                        startDestination = GameRoute(level = 10)
+                    ) {
+                        composable<GameRoute> { navBackStackEntry ->
+
+                            val level: Int = navBackStackEntry.toRoute<GameRoute>().level
+
+                            GameScreen(
+                                title = "Game",
+                                level = level,
+                            )
                         }
-                    val gameEngineMessage by viewModel.gameEngineMessage
 
-                    LaunchedEffect(key1 = Unit) {
-                        // No need to init game
-                        viewModel.startGame()
                     }
-
-                    GameScreen(
-                        title = "Welcome to the game",
-                        gameEngineMessage = gameEngineMessage,
-                        modifier = Modifier.padding(innerPadding)
-                    )
 
                 }
             }
@@ -53,10 +56,14 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@Serializable
+data class GameRoute(val level: Int)
+
+
 @Composable
 fun GameScreen(
     title: String,
-    gameEngineMessage: String,
+    level: Int,
     modifier: Modifier = Modifier,
 ) {
     Column {
@@ -65,7 +72,7 @@ fun GameScreen(
             modifier = modifier,
         )
         Text(
-            text = gameEngineMessage,
+            text = level.toString(),
             modifier = modifier,
         )
     }
@@ -75,6 +82,9 @@ fun GameScreen(
 @Composable
 fun GreetingPreview() {
     AppTheme {
-        GameScreen("Android", "1")
+        GameScreen(
+            title = "Android",
+            level = 1
+        )
     }
 }

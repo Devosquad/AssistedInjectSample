@@ -12,11 +12,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.decathlon.assitedinjectsample.ui.theme.SampleTheme
+import com.decathlon.assitedinjectsample.ui.theme.AppTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -25,10 +24,13 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            SampleTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+            AppTheme {
+                Scaffold(
+                    modifier = Modifier.fillMaxSize()
+                ) { innerPadding ->
+
                     val level = 1
-                    val viewModel = hiltViewModel<GameViewModel>()
+                    val viewModel: GameViewModel = hiltViewModel<GameViewModel>()
                     val gameEngineMessage by viewModel.gameEngineMessage
 
                     LaunchedEffect(key1 = Unit) {
@@ -41,6 +43,7 @@ class MainActivity : ComponentActivity() {
                         gameEngineMessage = gameEngineMessage,
                         modifier = Modifier.padding(innerPadding)
                     )
+
                 }
             }
         }
@@ -48,15 +51,19 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun GameScreen(title: String, gameEngineMessage: String, modifier: Modifier = Modifier) {
+fun GameScreen(
+    title: String,
+    gameEngineMessage: String,
+    modifier: Modifier = Modifier,
+) {
     Column {
         Text(
             text = title,
-            modifier = modifier
+            modifier = modifier,
         )
         Text(
             text = gameEngineMessage,
-            modifier = modifier
+            modifier = modifier,
         )
     }
 }
@@ -64,7 +71,7 @@ fun GameScreen(title: String, gameEngineMessage: String, modifier: Modifier = Mo
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview() {
-    SampleTheme {
+    AppTheme {
         GameScreen("Android", "1")
     }
 }

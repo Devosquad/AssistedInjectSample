@@ -1,8 +1,9 @@
 package com.decathlon.assitedinjectsample
 
-class GameEngine(val level: Int) {
+class GameEngine(
+    private val level: Int
+) {
 
-    fun startGame(): String {
-        return "Game started at level $level"
-    }
+    fun startGame(): String = "Game started at level $level"
+    
 }

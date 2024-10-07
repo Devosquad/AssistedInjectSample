@@ -12,10 +12,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.toRoute
 import com.decathlon.assitedinjectsample.ui.theme.AppTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.serialization.Serializable
@@ -38,13 +38,9 @@ class MainActivity : ComponentActivity() {
                         navController = navController,
                         startDestination = GameRoute(level = 10)
                     ) {
-                        composable<GameRoute> { navBackStackEntry ->
-
-                            val level: Int = navBackStackEntry.toRoute<GameRoute>().level
-
+                        composable<GameRoute> {
                             GameScreen(
                                 title = "Game",
-                                level = level,
                             )
                         }
 
@@ -63,7 +59,7 @@ data class GameRoute(val level: Int)
 @Composable
 fun GameScreen(
     title: String,
-    level: Int,
+    viewModel: GameViewModel = hiltViewModel<GameViewModel>(),
     modifier: Modifier = Modifier,
 ) {
     Column {
@@ -72,7 +68,7 @@ fun GameScreen(
             modifier = modifier,
         )
         Text(
-            text = level.toString(),
+            text = viewModel.level.toString(),
             modifier = modifier,
         )
     }
@@ -83,8 +79,7 @@ fun GameScreen(
 fun GreetingPreview() {
     AppTheme {
         GameScreen(
-            title = "Android",
-            level = 1
+            title = "Android"
         )
     }
 }

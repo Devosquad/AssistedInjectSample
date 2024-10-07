@@ -1,21 +1,17 @@
 package com.decathlon.assitedinjectsample
+
 import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
-@HiltViewModel(assistedFactory = GameViewModel.GameViewModelFactory::class)
-class GameViewModel @AssistedInject constructor(
+@HiltViewModel
+class GameViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
+) : ViewModel() {
 
-    @Assisted val level: Int): ViewModel() {
-
-    @AssistedFactory
-    interface GameViewModelFactory {
-        fun create(level: Int): GameViewModel
-    }
+    val level = savedStateHandle.get<Int>("level") ?: 0
 
     // We can create the gameEngine directly during the viewmodel creation
     var gameEngine = GameEngine(level)

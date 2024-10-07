@@ -4,6 +4,10 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -29,6 +33,7 @@ import kotlinx.serialization.Serializable
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
+    @OptIn(ExperimentalSharedTransitionApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -38,54 +43,74 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize()
                 ) { innerPadding ->
 
+                    SharedTransitionLayout {
+                        val navController = rememberNavController()
 
-                    val navController = rememberNavController()
+                        NavHost(
+                            modifier = Modifier.padding(innerPadding),
+                            navController = navController,
+                            startDestination = ListRoute
+                        ) {
 
-                    NavHost(
-                        modifier = Modifier.padding(innerPadding),
-                        navController = navController,
-                        startDestination = ListRoute
-                    ) {
+                            composable<ListRoute> {
+                                ListScreen(
+                                    navigateToDetailRoute = {
+                                        navController.navigate(DetailRoute(it))
+                                    },
+                                    sharedTransitionScope = this@SharedTransitionLayout,
+                                    animatedContentScope = this@composable
+                                )
+                            }
 
-                        composable<ListRoute> {
-                            ListScreen(
-                                navigateToDetailRoute = {
-                                    navController.navigate(DetailRoute(it))
-                                }
-                            )
-                        }
+                            composable<DetailRoute> { navBackStackEntry ->
+                                val index: Int = navBackStackEntry.toRoute<DetailRoute>().index
+                                DetailScreen(
+                                    index = index,
+                                    sharedTransitionScope = this@SharedTransitionLayout,
+                                    animatedContentScope = this@composable
+                                )
+                            }
 
-                        composable<DetailRoute> { navBackStackEntry ->
-                            val index: Int = navBackStackEntry.toRoute<DetailRoute>().index
-                            DetailScreen(index)
                         }
 
                     }
-
                 }
             }
         }
     }
 
+    @OptIn(ExperimentalSharedTransitionApi::class)
     @Composable
     private fun DetailScreen(
         index: Int,
+        sharedTransitionScope: SharedTransitionScope,
+        animatedContentScope: AnimatedContentScope
     ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-        ) {
-            Text(
-                modifier = Modifier.align(Alignment.Center),
-                text = emojiItems[index].emoji,
-                style = MaterialTheme.typography.displayLarge
-            )
+        with(sharedTransitionScope) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                Text(
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .sharedElement(
+                            sharedTransitionScope.rememberSharedContentState(key = "image-$index"),
+                            animatedVisibilityScope = animatedContentScope
+                        ),
+                    text = emojiItems[index].emoji,
+                    style = MaterialTheme.typography.displayLarge
+                )
+            }
         }
     }
 
+    @OptIn(ExperimentalSharedTransitionApi::class)
     @Composable
     private fun ListScreen(
         modifier: Modifier = Modifier,
         navigateToDetailRoute: (Int) -> Unit,
+        sharedTransitionScope: SharedTransitionScope,
+        animatedContentScope: AnimatedContentScope
     ) {
         LazyColumn(
             modifier = modifier,
@@ -96,23 +121,30 @@ class MainActivity : ComponentActivity() {
                 key = { index, _ -> index },
                 items = emojiItems
             ) { index, item ->
-                ListItem(
-                    modifier = Modifier.clickable {
-                        navigateToDetailRoute(index)
-                    },
-                    headlineContent = {
-                        Text(
-                            text = item.description,
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                    },
-                    leadingContent = {
-                        Text(
-                            text = item.emoji,
-                            style = MaterialTheme.typography.displayMedium
-                        )
-                    }
-                )
+                with(sharedTransitionScope) {
+                    ListItem(
+                        modifier = Modifier.clickable {
+                            navigateToDetailRoute(index)
+                        },
+                        headlineContent = {
+                            Text(
+                                text = item.description,
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                        },
+                        leadingContent = {
+                            Text(
+                                modifier = Modifier
+                                    .sharedElement(
+                                        sharedTransitionScope.rememberSharedContentState(key = "image-$index"),
+                                        animatedVisibilityScope = animatedContentScope
+                                    ),
+                                text = item.emoji,
+                                style = MaterialTheme.typography.displayMedium
+                            )
+                        }
+                    )
+                }
             }
         }
     }
